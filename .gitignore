@@ -1,0 +1,6 @@
+node_modules/
+uploads/
+data/test.json
+.env
+*.log
+.DS_Store

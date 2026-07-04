@@ -251,4 +251,71 @@ formbutton("create", {
   }
 });
 
+async function loadSiteAnnouncement() {
+  try {
+    const response = await fetch('/api/announcements');
+    const announcements = await response.json();
+    const published = announcements.find(item => item.status === 'published');
+    const banner = document.getElementById('siteAnnouncementBanner');
+    const titleEl = document.getElementById('announcementTitle');
+    const messageEl = document.getElementById('announcementMessage');
+    const mediaEl = document.getElementById('announcementMedia');
+
+    if (published) {
+      titleEl.textContent = published.title;
+      messageEl.textContent = published.message;
+      mediaEl.innerHTML = '';
+
+      if (published.media_url) {
+        if (published.media_type === 'image') {
+          mediaEl.innerHTML = `<img src="${published.media_url}" alt="Announcement image" />`;
+        } else if (published.media_type === 'video') {
+          mediaEl.innerHTML = `<video controls src="${published.media_url}"></video>`;
+        } else if (published.media_type === 'audio') {
+          mediaEl.innerHTML = `<audio controls src="${published.media_url}"></audio>`;
+        }
+      }
+
+      banner.hidden = false;
+      document.getElementById('announcementClose').addEventListener('click', () => {
+        banner.hidden = true;
+      });
+    } else if (banner) {
+      banner.hidden = true;
+    }
+
+    const announcementGrid = document.getElementById('announcementsList');
+    if (announcementGrid) {
+      if (announcements.length === 0) {
+        announcementGrid.innerHTML = `
+          <article class="announcement-card">
+            <h3>No announcements yet</h3>
+            <p>The latest church updates will appear here once the admin publishes them.</p>
+          </article>
+        `;
+      } else {
+        announcementGrid.innerHTML = announcements.map((item) => {
+          const media = item.media_url ? `\n            <div class="announcement-card-media">${item.media_type === 'image' ? `<img src=\"${item.media_url}\" alt=\"${item.title}\" />` : item.media_type === 'video' ? `<video controls src=\"${item.media_url}\"></video>` : item.media_type === 'audio' ? `<audio controls src=\"${item.media_url}\"></audio>` : ''}</div>` : '';
+          return `
+            <article class="announcement-card">
+              <div class="announcement-card-header">
+                <span>${item.audience}</span>
+                <time datetime="${item.created_at}">${new Date(item.created_at).toLocaleDateString()}</time>
+              </div>
+              <h3>${item.title}</h3>
+              <p>${item.message}</p>
+              ${media}
+              <p class="announcement-meta">Status: ${item.status} • Platforms: ${item.platforms.join(', ')}</p>
+            </article>
+          `;
+        }).join('');
+      }
+    }
+  } catch (error) {
+    console.warn('Unable to load site announcement', error);
+  }
+}
+
+loadSiteAnnouncement();
+
 

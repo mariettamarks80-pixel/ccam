@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: goldenrod; color: #222; }
+    .shell { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+    .card { background: #fff; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+    h1, h2 { margin-top: 0; }
+    form { display: grid; gap: 12px; }
+    input, textarea, select, button { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid #d8c79f; }
+    button { background: #b5840d; color: #fff; cursor: pointer; border: none; }
+    .grid { display: grid; gap: 16px; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #f7db7c; margin-right: 8px; }
+    .muted { color: #6b5c2d; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <h1>Church Announcement Admin</h1>
+      <p class="muted">Log in, create announcements, and publish to the website and social channels.</p>
+    </div>
+
+    <div class="card" id="loginSection">
+      <h2>Admin Login</h2>
+      <form id="loginForm">
+        <input id="email" type="email" placeholder="Admin email" required />
+        <input id="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p id="loginMessage" class="muted"></p>
+    </div>
+
+    <div class="card" id="announcementsSection" style="display:none;">
+      <h2>Create Announcement</h2>
+      <form id="announcementForm">
+        <input id="title" placeholder="Title" required />
+        <textarea id="message" rows="5" placeholder="Message" required></textarea>
+        <input id="audience" placeholder="Audience" value="Church family" />
+        <select id="mediaType">
+          <option value="text">Text</option>
+          <option value="image">Image</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+        </select>
+        <label for="mediaFile">Attach media (image, video, audio)</label>
+        <input id="mediaFile" name="mediaFile" type="file" accept="image/*,video/*,audio/*" />
+        <div id="filePreview" class="muted"></div>
+        <label><input id="publishNow" type="checkbox" /> Publish immediately</label>
+        <label>Platforms</label>
+        <div>
+          <label><input type="checkbox" value="website" checked /> Website</label>
+          <label><input type="checkbox" value="facebook" /> Facebook</label>
+          <label><input type="checkbox" value="instagram" /> Instagram</label>
+          <label><input type="checkbox" value="twitter" /> Twitter</label>
+        </div>
+        <button type="submit">Save Announcement</button>
+      </form>
+      <p id="announcementMessage" class="muted"></p>
+    </div>
+
+    <div class="card">
+      <h2>Recent Announcements</h2>
+      <div id="announcementList" class="grid"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = { token: localStorage.getItem('churchAdminToken') || '' };
+    const loginSection = document.getElementById('loginSection');
+    const announcementsSection = document.getElementById('announcementsSection');
+
+    if (state.token) {
+      loginSection.style.display = 'none';
+      announcementsSection.style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const payload = {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+      };
+
+      document.getElementById('loginMessage').textContent = 'Signing in...';
+
+      try {
+        const response = await fetch(`${window.location.origin}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          document.getElementById('loginMessage').textContent = data.error || 'Login failed';
+          return;
+        }
+        state.token = data.token;
+        localStorage.setItem('churchAdminToken', data.token);
+        loginSection.style.display = 'none';
+        announcementsSection.style.display = 'block';
+        document.getElementById('loginMessage').textContent = 'Logged in successfully';
+        loadAnnouncements();
+      } catch (error) {
+        document.getElementById('loginMessage').textContent = 'Unable to reach the server. Please try again.';
+      }
+    });
+
+    const mediaFileInput = document.getElementById('mediaFile');
+    const filePreview = document.getElementById('filePreview');
+
+    mediaFileInput.addEventListener('change', () => {
+      const file = mediaFileInput.files[0];
+      if (!file) {
+        filePreview.textContent = '';
+        return;
+      }
+      filePreview.textContent = `Selected file: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+      if (file.type.startsWith('image/')) {
+        document.getElementById('mediaType').value = 'image';
+      } else if (file.type.startsWith('video/')) {
+        document.getElementById('mediaType').value = 'video';
+      } else if (file.type.startsWith('audio/')) {
+        document.getElementById('mediaType').value = 'audio';
+      }
+    });
+
+    document.getElementById('announcementForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map((input) => input.value)
+        .filter(Boolean);
+
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value);
+      formData.append('message', document.getElementById('message').value);
+      formData.append('audience', document.getElementById('audience').value);
+      formData.append('mediaType', document.getElementById('mediaType').value);
+      formData.append('publishNow', document.getElementById('publishNow').checked ? '1' : '0');
+      formData.append('platforms', checked.length ? checked.join(',') : 'website');
+      if (mediaFileInput.files[0]) {
+        formData.append('mediaFile', mediaFileInput.files[0]);
+      }
+
+      const response = await fetch(`${window.location.origin}/api/announcements`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${state.token}`,
+        },
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        document.getElementById('announcementMessage').textContent = data.error || 'Unable to save announcement';
+        return;
+      }
+      document.getElementById('announcementMessage').textContent = 'Announcement saved';
+      document.getElementById('announcementForm').reset();
+      filePreview.textContent = '';
+      loadAnnouncements();
+    });
+
+    async function loadAnnouncements() {
+      const response = await fetch(`${window.location.origin}/api/announcements`);
+      const items = await response.json().catch(() => []);
+      const list = document.getElementById('announcementList');
+      list.innerHTML = items.map((item) => `
+        <div class="card">
+          <h3>${item.title}</h3>
+          <p>${item.message}</p>
+          <p class="muted">Audience: ${item.audience}</p>
+          <p>${item.platforms.map((platform) => `<span class="pill">${platform}</span>`).join('')}</p>
+          <p class="muted">Status: ${item.status}</p>
+        </div>
+      `).join('');
+    }
+
+    loadAnnouncements();
+  </script>
+</body>
+</html>

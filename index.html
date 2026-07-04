@@ -19,6 +19,15 @@
 
 <body>
 
+  <div class="announcement-banner" id="siteAnnouncementBanner" aria-live="polite" hidden>
+    <div class="announcement-content">
+      <strong id="announcementTitle">Announcement</strong>
+      <p id="announcementMessage"></p>
+      <div id="announcementMedia" class="announcement-media"></div>
+    </div>
+    <button type="button" class="announcement-close" id="announcementClose" aria-label="Close announcement">×</button>
+  </div>
+
   <div class="welcome-overlay" id="welcomeOverlay" aria-hidden="true">
     <div class="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <div class="welcome-icon"><img src="image/88888.png" alt=""></div>
@@ -48,6 +57,7 @@
           <li><a href="#home">Home</a></li>
           <li><a href="#about">About</a></li>
           <li><a href="#sermons">Sermons</a></li>
+          <li><a href="#announcements">Announcements</a></li>
           <li><a href="#leadership">Leadership</a></li>
           <!--v<li><a href="#events">Events</a></li>-->
           <li><a href="#contact">Contact</a></li>
@@ -341,6 +351,22 @@
 
   </section>
 
+  <!-- ANNOUNCEMENTS -->
+  <section class="announcements" id="announcements">
+    <div class="section-title">
+      <p class="eyebrow">Stay Informed</p>
+      <h2>Latest Announcements</h2>
+      <p class="section-copy">Read the latest updates from the church leadership and media posts published by the admin.</p>
+    </div>
+
+    <div class="announcement-list" id="announcementsList">
+      <article class="announcement-card">
+        <h3>No announcements yet</h3>
+        <p>The latest church updates will appear here once the admin publishes them.</p>
+      </article>
+    </div>
+  </section>
+
   <!-- EVENTS -->
   <!--<section class="events" id="events">
 
@@ -435,7 +461,22 @@
         <button type="submit">Submit</button>
       </form>
 
-      
+    </div>
+
+    <div class="map-panel">
+      <h3>Find us on the map</h3>
+      <div class="map-frame">
+        <iframe
+          src="https://maps.google.com/maps?q=15%20Anikulapo%20St%2C%20Agege%2C%20Lagos%2C%20Nigeria&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Christ Chosen Assembly Location">
+        </iframe>
+      </div>
+      <div class="map-links">
+        <a href="https://www.google.com/maps/search/?api=1&query=15%20Anikulapo%20St%2C%20Agege%2C%20Lagos%2C%20Nigeria" target="_blank" rel="noopener">Open in Google Maps</a>
+        <a href="https://www.openstreetmap.org/search?query=15%20Anikulapo%20St%20Agege%20Lagos%20Nigeria" target="_blank" rel="noopener">Open in OpenStreetMap</a>
+      </div>
     </div>
   </section>
   <!-- DONATION -->
